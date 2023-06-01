@@ -12,10 +12,14 @@ function positive_weight_cycle_detection(G, W)
         d[v, v] = 0
     end
     for (u, v) in E
-        d[u, v] = W[u, v]
+        """d[u, v] = W[u, v]
         d[v, u] = -W[u, v]  # Reverse direction with negated weight
         father[u, v] = u
-        father[v, u] = v  # Reverse direction
+        father[v, u] = v  # Reverse direction"""
+        d[u, v] = -W[u, v]
+        father[u, v] = u
+        #println("d[$u, $v] = $d[$u, $v]")
+        #println("father[$u, $v] = $(father[u, v])")
     end
 
     for w in V
@@ -26,13 +30,13 @@ function positive_weight_cycle_detection(G, W)
                     father[u, v] = father[w, v]
                 end
                 if u == v && d[u, u] < 0
-                    w = father[u, v]
-                    push!(Cycle, (w, v))
-                    v = w
-                    while v != u
+                    while true
                         w = father[u, v]
                         push!(Cycle, (w, v))
                         v = w
+                        if v == u
+                            break
+                        end
                     end
                     return Cycle    
                 end
@@ -46,27 +50,55 @@ end
 
 # Test
 
-G = transpose([0 1 0 0 0 0;
-     1 0 0 0 0 0;
-     0 0 0 1 0 0;
-     0 0 1 0 1 0;
-     0 0 1 0 0 0;
-     0 0 0 0 1 0])
+global ω = ([0.5 0.6 0 0 0 0;
+                0.8 0.4 0 0 0 0;
+                0 0 0 0.4 0 0;
+                0 0 0.5 0 0.5 0;
+                0 0 0.7 0 0 0;
+                0 0 0 0 0.9 0.8])
 
-ω = transpose([0.5 0.6 0 0 0 0;
-     0.8 0.4 0 0 0 0;
-     0 0 0 0.4 0 0;
-     0 0 0.5 0 0.5 0;
-     0 0 0.7 0 0 0;
-     0 0 0 0 0.9 0.8])
+global G =  (   [1 1 0 0 0 0;
+1 1 0 0 0 0;
+0 0 0 1 0 0;
+0 0 1 0 1 0;
+0 0 1 0 0 0;
+0 0 0 0 1 1])
+global X =  (   [1 0 0 0 0 0;
+0 1 0 0 0 0;
+0 0 0 1 0 0;
+0 0 1 0 0 0;
+0 0 1 0 0 0;
+0 0 0 0 1 0])
 
-# Call the positive_weight_cycle_detection function
-cycle = positive_weight_cycle_detection(G, ω)
+while true 
+    # Call the positive_weight_cycle_detection function
+    cycle = positive_weight_cycle_detection(G, ω)
 
-# Check if a positive weight cycle was found
-if isempty(cycle)
-    println("No positive weight cycle found.")
-else
-    println("Positive weight cycle found:")
-    println(cycle)
+    # Check if a positive weight cycle was found
+    if isempty(cycle)
+        println("No positive weight cycle found.")
+        break
+    else
+        println("Positive weight cycle found:")
+        println(cycle)
+    end
+
+    for u in 1:6
+        for v in 1:6
+            if (u, v) ∉ cycle && (v, u) ∉ cycle
+                X[u, v] += 0
+            elseif (u, v) ∈ cycle
+                X[u, v] += 1
+            elseif (v, u) ∈ cycle
+                X[u, v] += -1
+            end
+    
+            if X[u, v] == 1
+                ω[u, v] = -ω[v, u]  # Corrected: Swap u and v in the indices
+                G[u, v] = 0
+            end
+        end
+    end     
 end
+println("X = $X")
+

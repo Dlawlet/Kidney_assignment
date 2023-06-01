@@ -7,10 +7,10 @@
 \begin{document}
 
 \titleULB{
-	title={Exemple de Titre},
+	title={Maximizing the success rate of kidney transplants through combinatorial optimization},
 	studies={M-IRIFS},
 	course={Info-F424},
-	author={Olivier Vertu Ndinga Oba\\XXXX \\ Florian Noussa Yao \\490132 \\},
+	author={Olivier Vertu Ndinga Oba\\575921 \\ Florian Noussa Yao \\490132 \\},
 	date={2023},
 	teacher={Professeur: \\ Renaud Chicoisne \\ Assistant \\Cristian Aguayo\\},
 	logo={Pictures/logo-polytech.jpg},
@@ -18,443 +18,212 @@
 }
 
 \chapter{Introduction}
-nb:to rewritten 
-The purpose of this report is to address the problem of optimizing a specific scenario using Integer Programming (IP) and Linear Programming (LP) formulations. The scenario involves maximizing the weighted sum of edges in a graph subject to certain constraints. We will explore the validity of the IP formulation, the equivalence between IP and LP, and the exclusive definition of feasible solutions by disjoint cycles in the graph. By examining these concepts, we aim to gain a deeper understanding of the problem and develop effective optimization strategies. This report will provide a comprehensive analysis of the problem formulation and offer insights into the optimal solutions.
+The demand for kidney transplantation outstrips the available supply, representing a significant challenge in the medical field. Tissue compatibility between donors and recipients is essential for successful transplants, and kidney exchange programs offer a solution for patients whose living donors are medically incompatible. This project focuses on combinatorial optimization techniques to solve the kidney allocation problem and maximize the overall transplant success rate.
+
+To address this problem, we use integer programming (IP) formulations, guaranteeing model validity. We demonstrate the equivalence between integer programming and linear programming formulations, enabling efficient optimization. In addition we implement python program to solve the problem through positive cycle elimination procedure and gurobi solver.This project is addressed in both basic model and a more realistic model taking into account the maximum number of exchanges possible per cycle of transplants as a constraint.
+
 \chapter{A Basic model}
+
 \section{IP formulation}
-The given Integer Programming (IP) formulation is valid for the kidney assignment problem because it captures the key elements and constraints of the problem. Let's break down the components:
+for each edge $(u, v)$ representing a donor $(u)$ to a patient $(v)$ we have a weight $w_{uv}$ representing the probability of success of the transplant. The IP formulation is as follows:
 
-Variables:
+\begin{align*}
+\max_{x} \sum_{(u, v) \in E} w_{uv} x_{uv}\\ \sum_{v:(u, v) \in E} x_{uv} - \sum_{v:(v, u) \in E} x_{vu} = 0, \quad \forall u \in V \\\
+x_{uv} \in {0,1}, \quad \forall (u, v) \in E
+\end{align*}
+The given integer programming (IP) formulation is valid for our kidney transplant problem. Let's explain the variables, constraints and role of edges $(p_i, d_i)$.
 
-The decision variable is denoted as xuv, which represents whether an edge (u, v) is selected for a transplant assignment. It takes binary values (0 or 1), indicating whether the edge is chosen or not.
-Objective:
+\textbf{Variables:}
 
-The objective function aims to maximize the overall success rate of transplantations. It is defined as the sum of the weights (compatibilities) wuv multiplied by the corresponding decision variables xuv. The weights represent the compatibility of a donor u with a patient v.
-Constraints:
+The variable $x_{uv}$ represents the selection or non-selection of the edge $(u, v)$. It takes the binary values 0 or 1, where 0 indicates that the edge is not selected, and 1 indicates that the edge is selected. this is the decision variable of the problem. it is the variable that we will try to optimize. It directly describe which patient is assigned to which donor.
 
-The first set of constraints ensures that for each node u in the graph, the flow balance is maintained. It states that the sum of incoming edges (v, u) minus the sum of outgoing edges (u, v) should be equal to zero. This constraint ensures that each patient receives at most one kidney from a compatible donor, and each donor donates at most one kidney to a compatible patient.
-Binary Constraints:
+\textbf{Objective:}
 
-The decision variables xuv are binary, taking values of either 0 or 1. This constraint restricts the variables to represent the selection or non-selection of edges.
-Overall, the IP formulation accurately models the kidney assignment problem by maximizing the success rate through the decision variables, incorporating flow balance constraints for each node, and applying binary constraints on the decision variables. It provides a mathematical representation that can be used to find optimal solutions to the problem using integer programming techniques.
+The objective function is to maximize the overall success rate of transplants. It is represented by the summation over all edges $(u, v)$ in $E$ of the product of the weight $w_{uv}$ and the variable $x_{uv}$. The weight $w_{uv}$ corresponds to the compatibility or probability of success associated with the edge $(u, v)$.
+\newpage
+\textbf{Constraints:}
+
+The first constraint ensures flow conservation for each node $u$ in the network. It stipulates that the sum of incoming edges $(v, u)$ and the sum of outgoing edges $(u, v)$ must be equal to 0. This constraint guarantees that each patient or donor is assigned to exactly one other patient.
+
+The second constraint defines the domain of $x_{uv}$ variables. They can take binary values of 0 or 1, indicating whether an edge is selected or not, as discussed above.
+
+\textbf{The Edges $(p_i, d_i)$:}
+
+For each patient-donor pair $(p_i, d_i)$, there is an additional edge $(p_i, d_i)$ in the network. The cost associated with this edge is $w_{p_i, d_i} = 0$, which means that it does not contribute to the objective function. This edge ensures that each patient is assigned to the corresponding donor and does not incur any additional cost.
+
+In summary, the IP formulation aims to maximize the overall transplant success rate by selecting appropriate edges $(u, v)$ that represent patient-donor assignments. The objective function takes compatibility weights into account, while the constraints guarantee flow conservation and the binary nature of the decision variables.
 
 
 \section{LP equivalence}
+
+\begin{align*}
+\max_{x} \sum_{(u, v) \in E} w_{uv} x_{uv}\\
+\text{s.t.} \sum_{v:(u, v) \in E} x_{uv} - \sum_{v:(v, u) \in E} x_{vu} = 0, \quad \forall u \in V\\\ 
+x_{uv} \in [0,1], \quad \forall (u, v) \in E
+\end{align*}
+
 The given Linear Program (LP) formulation is obtained from the Integer Programming (IP) formulation by relaxing the integrality constraint on the decision variables. In the IP formulation, the variables are binary (0 or 1), while in the LP formulation, the variables are allowed to take continuous values between 0 and 1.
 
-To show that the IP and LP formulations are equivalent, we need to demonstrate that they have the same optimal value and share the same set of optimal solutions.
+\subsection{Equivalence Proof}
+To prove the equivalence between the IP and LP formulations, we need to show that they have the same optimal value and optimal solutions.
 
-Optimal value equivalence:
-Let's assume that 
-�
-∗
-x 
-∗
-  is an optimal solution to the IP formulation with objective value 
-�
-IP
-∗
-Z 
-IP
-∗
-​
- . We want to show that there exists a solution 
-�
-∗
-∗
-x 
-∗∗
-  to the LP formulation with the same objective value 
-�
-LP
-∗
-∗
-Z 
-LP
-∗∗
-​
- , and vice versa.
+\textbf{Optimal Value Equivalence:}
+Let $OPT_{IP}$ be the optimal value of the IP formulation and $OPT_{LP}$ the optimal value of the LP formulation. Our objective is to prove that $OPT_{LP} = OPT_{IP}$.
+Since the LP formulation allows $x_{uv}$ to take fractional values between 0 and 1, the optimal value $OPT_{LP}$ represents the maximum possible value of the objective function. In the IP formulation, on the other hand, $x_{uv}$ is restricted to binary values of 0 or 1, meaning that $OPT_{IP}$ represents the maximum achievable value taking into account only the selected edges.
+Since the objective function is the same in both formulations, the weights $w_{uv}$ are identical. Consequently, the maximum achievable value will be the same in both cases, i.e. $OPT_{LP} = OPT_{IP}$.
 
-For the IP formulation, since the decision variables are binary (
-�
-�
-�
-∈
-{
-0
-,
-1
-}
-x 
-uv
-​
- ∈{0,1}), we can simply set 
-�
-�
-�
-∗
-∗
-=
-�
-�
-�
-∗
-x 
-uv
-∗∗
-​
- =x 
-uv
-∗
-​
-  for all 
-(
-�
-,
-�
-)
-∈
-�
-(u,v)∈E to obtain a feasible solution for the LP formulation. Since the objective function coefficients (
-�
-�
-�
-w 
-uv
-​
- ) and the constraints remain the same, the objective value 
-�
-LP
-∗
-∗
-Z 
-LP
-∗∗
-​
-  will be equal to 
-�
-IP
-∗
-Z 
-IP
-∗
-​
- .
+\textbf{Optimal Solutions Equivalence:}
+To prove that the optimal solutions are equivalent, we need to show that any optimal solution of the LP formulation is also an optimal solution of the IP formulation, and vice versa.
+Consider an optimal solution $x^*_{LP}$ of the LP formulation. Given that $x_{uv} \in [0,1]$ for all $(u,v) \in E$, $x^*_{LP}$ can contain fractional values. However, we can transform $x^*_{LP}$ into a corresponding solution $x^*_{IP}$ in the IP formulation by rounding fractional values to binary values closest to 0 or 1.
+Similarly, consider an optimal solution $x^*_{IP}$ in the IP formulation. Given that $x_{uv} \in \{0,1\N}$ for all $(u,v) \in E$, $x^*_{IP}$ contains binary values. This binary solution is also a feasible solution for the LP formulation because $0 \leq x^*_{IP} \leq 1$.
+Therefore, any optimal solution of one formulation can be transformed into a corresponding optimal solution of the other formulation. This implies that the optimal solutions are equivalent.
 
-Similarly, we can show that for any optimal solution 
-�
-∗
-∗
-x 
-∗∗
-  to the LP formulation, we can obtain a binary solution 
-�
-∗
-x 
-∗
-  by rounding the values of 
-�
-∗
-∗
-x 
-∗∗
-  to the nearest 0 or 1. Again, since the objective function coefficients and constraints are the same, the objective value 
-�
-IP
-∗
-Z 
-IP
-∗
-​
-  will be equal to 
-�
-LP
-∗
-∗
-Z 
-LP
-∗∗
-​
- .
-
-Therefore, the optimal values of the IP and LP formulations are equivalent.
 
 Optimal solution equivalence:
 Since the LP formulation is a relaxation of the IP formulation, any feasible solution that satisfies the constraints of the IP formulation will also satisfy the constraints of the LP formulation. Thus, the set of optimal solutions for the IP formulation is a subset of the set of optimal solutions for the LP formulation.
-
-On the other hand, any optimal solution 
-�
-∗
-∗
-x 
-∗∗
-  to the LP formulation will have values between 0 and 1. If all the values are either 0 or 1, it is a feasible binary solution for the IP formulation. If there are values between 0 and 1, we can round them to the nearest 0 or 1 to obtain a feasible binary solution for the IP formulation. Therefore, the set of optimal solutions for the LP formulation is also a subset of the set of optimal solutions for the IP formulation.
-
-Thus, the IP and LP formulations share the same set of optimal solutions.
-
-In summary, the IP and LP formulations are equivalent in terms of optimal value and optimal solutions. The LP formulation relaxes the integrality constraint of the IP formulation, allowing for fractional values, but still provides the same optimal solution space.
-
+\newpage
 \section{Disjoint Cycles in Feasibles Solutions}
 
+To show that any feasible solution $x$ is exclusively defined by disjoint cycles in $G$, we need to demonstrate that the subgraph $(V, E(x))$, where $E(x) = {(u, v) \in E : x_{uv} = 1}$, can be decomposed into cycles that share no nodes with each other.
 
-ChatGPT
-To show that any feasible solution x is exclusively defined by disjoint cycles in G, we need to demonstrate that the subgraph (V, E(x)), where E(x) = {(u, v) ∈ E : xuv = 1}, can be decomposed into cycles that do not share any node with each other.
+To prove this, we can use the concept of strongly connected components (SCC) in a directed graph. A strongly connected component is a subgraph in which there is a directed path between any two vertices in the subgraph.
 
-First, let's define the concept of a cycle in a graph. A cycle is a path that starts and ends at the same node, with no repeated nodes except for the starting and ending node. In other words, it is a closed path that does not contain any repeated nodes except for the first and last node.
+First, consider the subgraph $(V, E(x))$ and assume that there is a cycle that shares a node with another cycle. This implies that there is a directed path from a node in one cycle to a node in another cycle, and vice versa.
 
-Now, let's consider a feasible solution x. In this solution, we have xuv = 1 for some edges (u, v) in E, indicating that these edges are selected in the solution.
+Let's now define a new graph $G'=(V',E')$, where $V'$ consists of the strongly connected components of the subgraph $(V, E(x))$, and $E'$ contains directed edges between these components based on the connections between cycles.
 
-To show that the subgraph (V, E(x)) can be decomposed into disjoint cycles, we will proceed with the following steps:
+Since there is a directed path between any node in a cycle and any other node in the same cycle, each strongly connected component of $G'$ forms a cycle on its own. Moreover, since there are no directed edges connecting nodes between different cycles, the cycles of $G'$ are disjoint.
 
-Start with an unvisited node in the subgraph (V, E(x)).
+Now consider the LP formulation constraints $\sum_{v :(u, v) \in E} x_{uv} - \sum_{v :(v, u) \in E} x_{vu} = 0, \for all u \in V$. These constraints ensure that the number of incoming and outgoing edges for each vertex is balanced. In other words, each vertex of the subgraph $(V, E(x))$ is part of a cycle and contributes equally to the incoming and outgoing edges of its cycle.
 
-Begin a depth-first search (DFS) traversal from the chosen node. During the traversal, we only consider the edges that have xuv = 1.
+Since the cycles of $G'$ are disjoint and every vertex of the subgraph $(V, E(x))$ belongs to a cycle, it follows that any feasible solution $x$ is exclusively defined by disjoint cycles in $G$.
 
-While performing the DFS traversal, we mark the visited nodes and keep track of the edges traversed.
-
-As we traverse the graph, if we encounter a visited node that is not the parent node in the DFS traversal, we have found a cycle. We can follow the path from the current node back to the previously visited node to form a cycle.
-
-After identifying a cycle, we continue the DFS traversal from the previously visited node to explore other nodes and edges that have not been visited yet. This ensures that we cover all nodes in the subgraph (V, E(x)).
-
-Repeat steps 1 to 5 until all nodes in the subgraph (V, E(x)) are visited.
-
-By following these steps, we can decompose the subgraph (V, E(x)) into disjoint cycles. Each cycle represents a distinct set of edges that form a closed path without sharing any nodes with other cycles.
-
-Therefore, any feasible solution x can be exclusively defined by disjoint cycles in G, where the subgraph (V, E(x)) is decomposed into cycles that do not share any nodes with each other.
+Consequently, we've shown that the subgraph $(V, E(x))$ can be decomposed into cycles that share no nodes between them, proving that any feasible solution $x$ is exclusively defined by disjoint cycles in $G$.
 
 \chapter{Positive cycle elimination procedure}
 
-\Chapter{Implementability}
+\subsection{Positive weight cycle detection}
+The Positive Cycle Elimination Procedure is an algorithm that iteratively improves the current solution by detecting positive-cost cycles in the residual graph and updating the solution based on the detected cycles. The algorithm aims to increase the overall success rate of transplants by modifying the assignments of patients to donors.
+\\
+
+\textbf{The algorithm comprises the following steps:}
+
+1. Construct the residual network $G(x)$ based on the current solution $x$. The residual network represents the remaining possibilities for assigning patients to donors after the initial solution.
+
+2. Apply a positive-weight cycle detection routine to find a positive-cost cycle in the residual graph $G(x)$. This cycle must have a strictly positive cost, indicating that changing the assignments along the cycle can improve the objective value.
+
+3. If no positive-cost cycle is found, the algorithm terminates. The current solution is optimal and no further improvements can be made.
+
+4. If a positive-cost cycle is found, update the $x$ solution by adding or deleting assignments (edges) based on the cycle detected. This update should increase the value of the objective.
+
+5. Return to step 1 and repeat the process until no positive-cost cycles can be found in the residual graph. At this point, the algorithm ends and the solution is optimal.
+
+The positive-cost cycle detection routine can be implemented using various graph algorithms, such as the Bellman-Ford or Floyd-Warshall algorithms. These algorithms detect cycles with negative or positive costs in a graph. For the positive cycle elimination procedure, we are interested in cycles with positive costs, as they indicate potential improvements to the current solution.
+
+The complexity of the positive cycle elimination procedure depends on the size and structure of the graph. In the worst case, the algorithm can have a complexity of  $O(|V|^3)$, where |V| is the number of vertices in the graph. However, the actual complexity may be lower, depending on the efficiency of the chosen cycle detection algorithm and the structure of the graph.
+
+It is important to note that the positive cycle elimination procedure can be applied as a post-processing step after an initial solution has been obtained using the IP or LP formulation. This allows the solution to be refined and local optima to be found. The algorithm can be repeated several times to improve the solution until convergence or a desired level of optimization is achieved.
+
+Implementation of the positive cycle elimination procedure requires construction of the residual graph, implementation of the positive weight cycle detection routine and updating of the solution on the basis of the cycles detected.
+
+\subsection{Gurobi solver}
+
+The Gurobi solver is a commercial optimization solver that can be used to solve the kidney transplant problem. It is a state-of-the-art solver that implements a variety of algorithms for solving linear and integer programming problems. It can be used to solve the IP formulation of the kidney transplant problem. He used the gurobi solver to solve the problem of kidney transplant. on the compatibility table given in the project statement, we obtain the same solution as the one given in the statement. the implementation quite simple and fast. We just need to define the variables, the objective function and the constraints. The solver takes care of the rest. The solution obtained is optimal and corresponds to the maximum success rate of transplants. 
+The solutions obtained for the small, medium and large files are as follows:
+
+%graphics comme here the 3 of them in one line 1 per colonne
+\begin{figure}[h]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Pictures/small.png}
+    \caption{Small file solution}
+    \label{fig:small}
+  \end{minipage}\hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Pictures/medium.png}
+    \caption{Medium file solution}
+    \label{fig:medium}
+  \end{minipage}\hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Pictures/large.png}
+    \caption{Large file solution}
+    \label{fig:large}
+  \end{minipage}
+\end{figure}
+
+
+  \caption{Comparison of file solutions}
+  \label{fig:file-solutions}
+\end{figure}
+
+Because in medium file and large we have pair(patient, donor) where the donor is compatible with no one for exemple the pair (1,1) in medium file. We havesome non complete cycle or and patient that won't receive any kidney. We could have remove the faulty pair before solving the problem but as we can see the implmentation can actually handle this kind of case. and We can see that, at optimality the patient 1 receive a kidney despite his useless donor and patient 8 won't receive any kidney. 
+
+
+
+\chapter{Implementability}
 \section{IP formulation}
  This formulation takes into account the maximum number of exchanges (M) possible per cycle of transplants. Let's analyze the components of the formulation and explain why it is valid for the given problem:
 
-Objective Function:
-max
-⁡
-�
-∑
-(
-�
-,
-�
-)
-∈
-�
-�
-�
-�
-�
-�
-�
-max 
-x
-​
- ∑ 
-(u,v)∈E
-​
- w 
-uv
-​
- x 
-uv
-​
- 
-The objective function maximizes the weighted sum of edges in the graph, similar to the previous formulation. It assigns a weight 
-�
-�
-�
-w 
-uv
-​
-  to each edge 
-(
-�
-,
-�
-)
-(u,v) and aims to maximize the total weight by determining the appropriate assignment of variables 
-�
-�
-�
-x 
-uv
-​
- .
 
-Constraints:
+\begin{align*}
+\max_{x} \quad & \sum_{(u,v) \in E} w_{uv}x_{uv} \quad (1) \\
+\text{s.t.} \quad & \sum_{v:(u,v) \in E} x_{uv} - \sum_{v:(v,u) \in E} x_{vu} = 0, \quad \forall u \in V \quad (2) \\
+& \sum_{(u,v) \in C} x_{uv} \leq |C| - 1, \quad \forall C \text{ cycle of } G \text{ such that } |C| > 2M \quad (3) \\
+& x_{uv} \in \{0, 1\}, \quad \forall (u, v) \in E \quad (4)
+\end{align*}
 
-Balance Constraints:
-∑
-�
-:
-(
-�
-,
-�
-)
-∈
-�
-�
-�
-�
-−
-∑
-�
-:
-(
-�
-,
-�
-)
-∈
-�
-�
-�
-�
-=
-0
-,
-∀
-�
-∈
-�
-∑ 
-v:(u,v)∈E
-​
- x 
-uv
-​
- −∑ 
-v:(v,u)∈E
-​
- x 
-vu
-​
- =0,∀u∈V
-These constraints ensure that for each vertex 
-�
-u, the number of outgoing edges is equal to the number of incoming edges. This maintains the balance in the transplant chain, ensuring that no patient is left without a donor.
+The IP formulation provided is valid for the problem taking into account the constraint of a maximum number $M$ of possible exchanges per transplant cycle. Let's analyze each component of the formulation to understand its meaning:
 
-Cycle Constraints:
-∑
-(
-�
-,
-�
-)
-∈
-�
-�
-�
-�
-≤
-∣
-�
-∣
-−
-1
-,
-∀
-�
- cycle of 
-�
- such that 
-∣
-�
-∣
->
-2
-�
-∑ 
-(u,v)∈C
-​
- x 
-uv
-​
- ≤∣C∣−1,∀C cycle of G such that ∣C∣>2M
-These constraints limit the size of cycles in the graph. It ensures that for any cycle 
-�
-C with a size greater than 
-2
-�
-2M, the number of active edges (assigned 
-�
-�
-�
-=
-1
-x 
-uv
-​
- =1) is less than the cycle size minus one. This limitation accounts for the logistical constraints mentioned, where the number of simultaneous transplants in a cycle is restricted to a maximum value of 
-�
-M.
+\textbf{Objective function:}
+The objective function (1) aims to maximize the total weight of the selected edges. The weights $w_{uv}$ represent the importance or desirability of each edge in the transplant process. By maximizing this objective, we give priority to the most beneficial or useful exchanges within the given network.
 
-Binary Variables:
-�
-�
-�
-∈
-{
-0
-,
-1
-}
-,
-∀
-(
-�
-,
-�
-)
-∈
-�
-x 
-uv
-​
- ∈{0,1},∀(u,v)∈E
-The variables 
-�
-�
-�
-x 
-uv
-​
-  represent whether an edge 
-(
-�
-,
-�
-)
-(u,v) is active (assigned 
-�
-�
-�
-=
-1
-x 
-uv
-​
- =1) or not (assigned 
-�
-�
-�
-=
-0
-x 
-uv
-​
- =0). By restricting the variables to binary values, the formulation ensures that only eligible edges are included in the solution.
+\textbf{Constraint 1:}
+Constraint (2) guarantees that for each vertex $u$ of the graph $G$, the incoming and outgoing edges are balanced. This constraint ensures that each vertex participates equally in transplant cycles, maintaining the integrity of the graph structure.
+\\
 
-Validity:
-The modified IP formulation is valid for the problem because it incorporates the maximum number of exchanges per cycle (M) as a constraint. By limiting the size of cycles to 
-2
-�
-2M, it respects the logistical limitations of performing simultaneous transplants. Additionally, the balance constraints ensure that no patient is left without a donor. The objective function and binary variables remain consistent with the previous formulation.
+\textbf{Constraint 2:}
+Constraint (3) introduces a restriction on the size of cycles considered for transplantation. It stipulates that for any cycle $C$ of the graph $G$ with a length greater than $2M$, the number of edges selected in the cycle must be less than the length of the cycle minus one. This constraint limits the size of simultaneous transplants within the feasibility interval determined by $M$. It ensures that the cycles involved in the transplant process are manageable and realistic given the logistical constraints mentioned in the problem statement.
 
-By considering the logistical constraints and legal considerations, the modified IP formulation provides a practical and valid approach for solving the problem of maximizing transplant chains while respecting the limitations imposed by the logistics and legal aspects of the scenario.
+\textbf{Constraint 3:}
+Constraint (4) specifies that the decision variable $x_{uv}$ must be binary and take the value 0 or 1. This constraint reflects the nature of the problem, in which an edge can be selected for transplantation (value 1) or not (value 0). It ensures that the solution represents a valid set of selected edges.
+
+In summary, the IP formulation incorporates the logistical limits of the transplantation process by introducing constraint (3), which limits the size of cycles considered for transplantation to within the feasibility interval determined by $M$. This constraint ensures that simultaneous transplants are manageable in practice. By optimizing the objective function while satisfying the equilibrium constraint (2) and the binary variable constraint (4), the IP formulation provides a valid model for solving the problem of maximizing exchange desirability while taking into account the practical constraints imposed by the transplantation process.
+
 \section{Solver implmentation}
-%Bibliography
+
+Based on the implementation of the gurobi solver in the previous section, we have implemented the solver for the IP formulation taking into account the maximum number of exchanges (M) possible per cycle of transplants. To do this, we have added the constraint (3) to the previous formulation to the solver, then we iteratively solve the problem and we check if there is any cycle in solution with a number of exchange  strictly greater than $M$. then we update the list of Cycle for the constraints (3) and we solve the problem again until there is no cycle with a number of exchange greater than $M$. The solution obtained is optimal and corresponds to the maximum success rate of transplants acheivable in this condition. The solutions obtained for the small, medium and large files are as follows:
+\begin{figure}[h]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Pictures/small.png}
+    \caption{Small file solution}
+    \label{fig:small}
+  \end{minipage}\hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Pictures/medium.png}
+    \caption{Medium file solution}
+    \label{fig:medium}
+  \end{minipage}\hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Pictures/large.png}
+    \caption{Large file solution}
+    \label{fig:large}
+  \end{minipage}
+\end{figure}
+
+
+We can notice that we have more non complete cycle or and patient that won't receive any kidney. 
+
+\chapter{Conclusion}
+
+In this project, we have studied the problem of kidney transplantation and proposed a solution based on combinatorial optimization techniques. We have shown that the problem can be formulated as an integer programming (IP) problem, and we have demonstrated the equivalence between the IP and linear programming (LP) formulations. We have also shown that any feasible solution $x$ is exclusively defined by disjoint cycles in $G$. This implies that the problem can be solved by finding the optimal set of disjoint cycles in $G$. We have implemented the positive cycle elimination procedure to solve the problem, and we have shown that it can be used as a post-processing step to refine the solution obtained using the IP or LP formulation. Finally, we have implemented the gurobi solver to solve the problem of kidney transplant. We have also implemented the solver for the IP formulation taking into account the maximum number of exchanges (M) possible per cycle of transplants. We have shown that the IP formulation is valid for the given problem, and we have demonstrated that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. We have also shown that the solver can be used to solve the problem of kidney transplant. 
+
 \nocite{*}
 \printbibliography[type=article,title=Articles]
 
