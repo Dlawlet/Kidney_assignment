@@ -6,19 +6,24 @@ def draw_donation_cycle_graph(cycles, weights):
         donation_edges = []
         donneurs = [cycle[i] for i in range(len(cycle)) if i % 2 == 0]
         patients = [cycle[i] for i in range(len(cycle)) if i % 2 == 1]
+
+        donneurs_set = set(donneurs)
+        patients_set = set(patients)
+
+        G = nx.DiGraph()
+
+        for donneur in donneurs_set:
+            G.add_node("D{}".format(donneur[1:]), color='red')
+
+        for patient in patients_set:
+            G.add_node("P{}".format(patient[1:]), color='green')
+
         for i in range(len(donneurs) - 1):
             donneur = donneurs[i]
             patient = patients[i]
             weight = weights[int(donneur[1:]), int(patient[1:])]
             donation_edges.append(("D{}".format(donneur[1:]), "P{}".format(patient[1:]), weight))
             donation_edges.append(("P{}".format(patient[1:]), "D{}".format(patient[1:]), 0))
-
-        G = nx.DiGraph()
-
-        for donneur, patient, _ in donation_edges:
-            
-            G.add_node(donneur, color='red')
-            G.add_node(patient, color='green')
 
         G.add_weighted_edges_from(donation_edges)
 

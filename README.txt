@@ -1,3 +1,15 @@
+How to use: 
+
+the project has 3 main files:
+1. solve_kidney_exchange.py - this file contains the main algorithm to solve the kidney exchange problem
+2. draw_donation_cycle.py - conttain functions to draw cycle 
+3. kidney_functions.py - contain functions needed to run the algorithm in solve_kidney_exchange.py
+4. Project_NOTEBOOK.ipynb - this is a notebook that contains call to  solve_kidney_exchange.py and draw_donation_cycle.py 
+    * IN case of error restart the kernel and clear all output and run all cells again
+    * Note : the notebook is not needed to run the algorithm, it is just a way to visualize the results and goes with the report. 
+
+
+
 Instance Structure
 
 First line is of the form

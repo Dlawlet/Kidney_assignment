@@ -25,7 +25,6 @@ def solve_kidney_exchange(filename, solve_cycles=False):
     if solve_cycles:
 
         print("Start solving for kidney exchange with cycle")
-        print(f"Size of donors: {len(donors)}, size of patients: {len(patients)}")
 
         copy_weights = deepcopy(weights)
         copy_donors = deepcopy(donors)
@@ -34,7 +33,7 @@ def solve_kidney_exchange(filename, solve_cycles=False):
 
         while True:
             inside = False
-            solution = kydneys(copy_donors, copy_patients, copy_weights, M, C, nb_pairs)
+            solution,obj = kydneys(copy_donors, copy_patients, copy_weights, M, C, nb_pairs)
             # Check solution's cycles exceed the maximum cycle length
             for cycle in form_chain_and_cycles(solution):
                 if len(cycle) - 1 > M:
@@ -46,9 +45,10 @@ def solve_kidney_exchange(filename, solve_cycles=False):
             if not inside:
                 break
 
-        print("enf of solving for kidney exchange with cycle")
+        print("end of solving for kidney exchange with cycle")
         print()
-        print(f"Optimal solution depends on cycle length {M}")
+        print(f"Optimal solution with cycle length of maximum = {M}")
+        print(f"The objective value is {obj}")
         print(solution)
         print()
         
@@ -101,8 +101,9 @@ def solve_kidney_exchange(filename, solve_cycles=False):
         # Print the optimal solution
         if model.status == GRB.OPTIMAL:
 
-            print(f"Size of donors: {len(donors)}, size of patients: {len(patients)}")
-            print("enf of solving for kidney exchange with cycle")
+            
+            print("end of solving for kidney exchange with cycle")
+            print(f"The objective value is {obj}")
             print("Optimal solution:")
 
             for d in donors:

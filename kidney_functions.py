@@ -32,6 +32,8 @@ def kydneys(donors, patients, weights, M, C, nb_pairs ):
     # Set objective function
     obj = gp.quicksum(weights[d, p] * x[d, p] for d, p in weights)
     model.setObjective(obj, GRB.MAXIMIZE)
+
+    
     
     for d in donors:
         model.addConstr(gp.quicksum(x[d, p] for p in patients) <= 1)
@@ -59,7 +61,7 @@ def kydneys(donors, patients, weights, M, C, nb_pairs ):
                     solution.append((str(d), str(p)))
     else:
         print("No solution found.")
-    return solution
+    return solution, model.objVal
 
 
 def form_chain_and_cycles(edges):
@@ -116,7 +118,6 @@ def find_disjoint_cycles(graph):
             if current_node in graph:
                 next_node = graph[current_node][0]
             else:
-                print("Not all cycles are disjoints")
                 break
 
             del graph[current_node]
